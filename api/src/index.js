@@ -1,11 +1,38 @@
 import db from './db.js';
-import express from 'express'
+import express, { raw } from 'express'
 import cors from 'cors'
+import Crypto from 'crypto-js'
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+
+app.post('/login', async (req, resp) => {
+    try {
+        const login = req.body.usuario;
+        const senha = req.body.senha;
+        const cryptoSenha = Crypto.SHA256(senha).toString(Crypto.enc.Base64);
+
+
+        let u = await db.tb_usuario.findOne({
+             where: {
+                   ds_login: login,
+                   ds_senha: cryptoSenha 
+            },
+            raw: true
+        });
+
+        if (u == null)
+            return resp.send({ erro: 'Credenciais Inválidas'});
+
+        delete u.ds_senha;
+        resp.send(u);
+
+    } catch (e) { 
+        resp.send({ erro: 'Ocorreu um erro!'})
+    }
+})
 
 app.post('/sala', async (req, resp) => {
     try {
@@ -17,7 +44,7 @@ app.post('/sala', async (req, resp) => {
 
         let r = await db.tb_sala.create({
             nm_sala: salaParam.nome,
-            bt_ativo: salaParam.ativo
+            bt_ativa: salaParam.ativa
         })
         resp.send(r);
     } catch (e) {
@@ -44,7 +71,9 @@ app.post('/usuario', async (req, resp) => {
             return resp.send({ erro: 'Usuário já existe!' });
         
         let r = await db.tb_usuario.create({
-            nm_usuario: usuParam.nome
+            nm_usuario: usuParam.nome,
+            ds_login: usuParam.login,
+            ds_senha: Crypto.SHA256(usuParam.senha).toString(Crypto.enc.Base64)
         })
         resp.send(r);
     } catch (e) {
@@ -113,6 +142,16 @@ app.get('/chat/:sala', async (req, resp) => {
         resp.send(mensagens);
     } catch (e) {
         resp.send(e.toString())
+    }
+})
+
+
+app.delete('/chat/:id', async(req, resp) => {
+    try {
+        let r = await db.tb_chat.destroy({ where: { id_chat: req.params.id }})
+        resp.sendStatus(200);
+    } catch (e) {
+        resp.send({erro: e.toString()});
     }
 })
 
