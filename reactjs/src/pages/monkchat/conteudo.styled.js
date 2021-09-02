@@ -109,9 +109,9 @@ const ContainerConteudo = styled.div`
     .chat-message {
         display: flex;
         flex-direction: row;
+        align-items: center;
 
         font-size: .9em;
-        margin: .4em .2em;
     }
 
     .chat-message > div {

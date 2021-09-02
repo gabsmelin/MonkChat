@@ -8,10 +8,6 @@ app.use(cors());
 app.use(express.json());
 
 
-
-//foi
-
-
 app.post('/login', async (req, resp) => {
     try {
         const login = req.body.usuario;
